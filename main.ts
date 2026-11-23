@@ -16,9 +16,21 @@ function validate(text) {
   if (text.includes("\n") || text.includes("\r")) {
     throw new Error("entry must be a single line (no newline characters)");
   }
+  // Reject invisible control characters (code points U+0000–U+001F, U+007F):
+  // a single-line entry must contain only printable text.
+  for (const ch of text) {
+    const cp = ch.codePointAt(0);
+    if ((cp <= 0x1f && cp !== 0x09) || cp === 0x7f) {
+      throw new Error(
+        `entry contains a forbidden control character U+${cp.toString(16).padStart(4, "0")}`
+      );
+    }
+  }
   const length = [...text].length; // code points, not UTF-16 units
   if (length < 1 || length > 200) {
-    throw new Error(`entry must be 1-200 characters, got ${length}`);
+    throw new Error(
+      `entry must be 1-200 characters (code points), got ${length} code points`
+    );
   }
   return length;
 }
